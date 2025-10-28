@@ -7,7 +7,7 @@ body {
 }
 
 #header {
-    background: #A0CFFF;
+    background: #60fcee;
     color: #3474A8;
 }
 
@@ -41,4 +41,15 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.column-filter {
+    width: 100%;
+    min-width: 80px;
+    font-size: 0.85rem;
+}
+
+#filter-row th {
+    padding: 0.25rem;
+    background-color: #f8f9fa;
 }

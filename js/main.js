@@ -141,7 +141,7 @@ function loadDB(arrayBuffer) {
         $("#output-box").fadeIn();
         $(".nouploadinfo").hide();
         $("#sample-db-link").hide();
-        $("#dropzone").delay(50).animate({height: 75}, 500);
+        $("#dropzone").fadeOut(500);
         $("#success-box").show();
 
         setIsLoading(false);
@@ -240,7 +240,7 @@ function dropzoneClick() {
 }
 
 function doDefaultSelect(name) {
-    const defaultSelect = `SELECT * FROM '${name}' LIMIT 0,30`;
+    const defaultSelect = `SELECT * FROM '${name}' LIMIT 0,10000`;
     editor.setValue(defaultSelect, -1);
     renderQuery(defaultSelect);
 }
@@ -318,7 +318,7 @@ function setPage(el, next) {
 
 function refreshPagination(query) {
     const limit = parseLimitFromQuery(query);
-    if (limit !== null && limit.pages > 0) {
+    if (limit !== null && limit.pages > 1) {
         const pager = $("#pager");
         const pagePrev = $("#page-prev");
         const pageNext = $("#page-next");
@@ -367,10 +367,12 @@ function htmlEncode(value) {
 
 function renderQuery(query) {
     const dataBox = $("#data");
-    const thead = dataBox.find("thead").find("tr");
+    const headerRow = $("#header-row");
+    const filterRow = $("#filter-row");
     const tbody = dataBox.find("tbody");
 
-    thead.empty();
+    headerRow.empty();
+    filterRow.empty();
     tbody.empty();
     errorBox.hide();
     infoBox.hide();
@@ -398,7 +400,8 @@ function renderQuery(query) {
     for (let i = 0; i < columnNames.length; i++) {
         const columnName = columnNames[i];
         const type = columnTypes.has(columnName) ? columnTypes.get(columnNames[i]) : "";
-        thead.append(`<th><span data-bs-toggle="tooltip" title="${type}">${columnNames[i]}</span></th>`);
+        headerRow.append(`<th><span data-bs-toggle="tooltip" title="${type}">${columnNames[i]}</span></th>`);
+        filterRow.append(`<th><input type="text" class="form-control form-control-sm column-filter" data-column="${i}" placeholder="Search..."></th>`);
     }
 
     while (sel.step()) {
@@ -434,7 +437,40 @@ function renderQuery(query) {
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
+    // Setup column filters
+    $(".column-filter").on("keyup", function() {
+        filterTable();
+    });
+
     dataBox.editableTableWidget();
+}
+
+function filterTable() {
+    const filters = [];
+    $(".column-filter").each(function() {
+        filters.push($(this).val().toLowerCase());
+    });
+
+    $("#data tbody tr").each(function() {
+        const row = $(this);
+        let showRow = true;
+
+        row.find("td").each(function(index) {
+            if (filters[index] && filters[index].length > 0) {
+                const cellText = $(this).text().toLowerCase();
+                if (!cellText.includes(filters[index])) {
+                    showRow = false;
+                    return false; // break out of loop
+                }
+            }
+        });
+
+        if (showRow) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
 }
 
 function renderBlobItem(tr, bytes) {

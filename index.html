@@ -33,14 +33,14 @@
 
 <div id="main-container" class="container shadow bg-white">
     <header id="header" class="row align-items-center p-4">
-        <img src="img/logo.svg" width="54" height="54" class="col-auto p-0" alt="Database logo"/>
+        <img src="img/logo.png" width="54" height="54" class="col-auto p-0" alt="Database logo"/>
 
         <div class="col">
-            <h4 class="mb-0">SQLite Viewer</h4>
-            <p class="mb-0">view sqlite file online</p>
+            <h4 class="mb-0">Translations, Viewer & Editor</h4>
+            <p class="mb-0">Adrian G.</p>
         </div>
 
-        <a href="#" id="resizer" aria-label="Expand/Collapse" class="col-auto text-decoration-none" style="color: #3474A8">
+        <a href="#" id="resizer" aria-label="Expand/Collapse" class="col-auto text-decoration-none" style="color: #60fcee">
             <svg id="resizer-expand" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrows-angle-expand" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707"/>
             </svg>
@@ -57,13 +57,7 @@
     <div class="row text-center p-3 align-items-stretch" id="dropzone" onclick="dropzoneClick(this)">
         <div class="d-flex border border-info-subtle rounded-1 align-items-center justify-content-center">
             <div id="drop-text">
-                <b>Drop file here</b> to load content or click on this box to open file dialog.<br/>
-
-                <div class="nouploadinfo small mb-3">No file will be uploaded - uses only JavaScript HTML5 FileReader.
-                </div>
-
-                <a id="sample-db-link" class="no-propagate small text-decoration-none"
-                   href="examples/Chinook_Sqlite.sqlite">&hellip; or download &amp; try this sample file</a>
+                <b>Drop translations.db file here</b> click on this box to open the folder.
             </div>
             <div id="drop-loading" class="d-flex align-items-center d-none">
                 <div class="spinner-border me-2" role="status">
@@ -103,7 +97,8 @@
             <div class="overflow-x-auto">
                 <table id="data" class="table table-sm table-bordered table-hover table-striped">
                     <thead>
-                    <tr></tr>
+                    <tr id="header-row"></tr>
+                    <tr id="filter-row"></tr>
                     </thead>
                     <tbody class="table-group-divider"></tbody>
                 </table>
@@ -129,10 +124,7 @@
     </div>
 </div>
 
-<footer class="col text-center text-secondary py-2 my-1 small" id="footer">
-    <a href="https://yuraj11.github.io" class="text-decoration-none">&copy; 2024 Juraj Novák</a><br>
-    <small>| <a href="https://github.com/inloop/sqlite-viewer" class="text-decoration-none link-opacity-75">Fork me on GitHub</a> |</small>
-</footer>
+
 
 <input type="file" id="dropzone-dialog" style="opacity: 0;display:none">
 
