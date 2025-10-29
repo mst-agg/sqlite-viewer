@@ -413,8 +413,10 @@ function renderQuery(query) {
     for (let i = 0; i < columnNames.length; i++) {
         const columnName = columnNames[i];
         const type = columnTypes.has(columnName) ? columnTypes.get(columnNames[i]) : "";
-        headerRow.append(`<th><span data-bs-toggle="tooltip" title="${type}">${columnNames[i]}</span></th>`);
-        filterRow.append(`<th><input type="text" class="form-control form-control-sm column-filter" data-column="${i}" placeholder="Search..."></th>`);
+        const isHidden = columnName.toLowerCase() === 'context_checked';
+        const hiddenClass = isHidden ? ' class="hidden-column"' : '';
+        headerRow.append(`<th${hiddenClass}><span data-bs-toggle="tooltip" title="${type}">${columnNames[i]}</span></th>`);
+        filterRow.append(`<th${hiddenClass}><input type="text" class="form-control form-control-sm column-filter" data-column="${i}" placeholder="Search..."></th>`);
     }
 
     while (sel.step()) {
@@ -432,7 +434,16 @@ function renderQuery(query) {
                 }
             } else {
                 let value = htmlEncode(s[i]);
-                tr.append(`<td data-original-value="${value}"><span title="${value}">${value}</span></td>`);
+                // Mark 'en' column as non-editable, hide 'context_checked' column
+                const isReadOnly = columnName.toLowerCase() === 'en';
+                const isHidden = columnName.toLowerCase() === 'context_checked';
+                let classAttr = '';
+                if (isHidden) {
+                    classAttr = ' class="hidden-column"';
+                } else if (isReadOnly) {
+                    classAttr = ' class="non-editable"';
+                }
+                tr.append(`<td data-original-value="${value}" title="${value}"${classAttr}>${value}</td>`);
             }
         }
         tbody.append(tr);
@@ -455,11 +466,14 @@ function renderQuery(query) {
         filterTable();
     });
 
-    // Initialize editable table
+    // Initialize editable table (exclude non-editable cells)
     dataBox.editableTableWidget();
 
+    // Remove tabindex from non-editable cells to prevent editing
+    $("#data tbody td.non-editable").prop('tabindex', -1).off('click keypress dblclick');
+
     // Track cell changes
-    $("#data tbody td").on("change", function(evt, newValue) {
+    $("#data tbody td:not(.non-editable)").on("change", function(evt, newValue) {
         const cell = $(this);
         const rowIndex = cell.parent().index();
         const colIndex = cell.index();
@@ -467,7 +481,7 @@ function renderQuery(query) {
         const columnName = currentColumnNames[colIndex];
         const originalValue = cell.attr('data-original-value');
 
-        // Get the row data to find primary key or unique identifier (using original values)
+        // Get the original row data for WHERE clause (always use original values)
         const rowData = [];
         cell.parent().find("td").each(function() {
             const origVal = $(this).attr('data-original-value');
@@ -486,7 +500,7 @@ function renderQuery(query) {
                 rowData: rowData
             });
         } else {
-            // Update existing change
+            // Update existing change - keep the same rowData (original values)
             const change = cellChanges.get(cellKey);
             change.newValue = newValue;
         }
@@ -583,11 +597,22 @@ function saveChanges() {
     }
 
     try {
-        // Apply each change
+        // Group changes by row
+        const changesByRow = new Map();
         cellChanges.forEach((change, key) => {
-            const { columnName, newValue, rowData } = change;
+            const rowIndex = change.rowIndex;
+            if (!changesByRow.has(rowIndex)) {
+                changesByRow.set(rowIndex, []);
+            }
+            changesByRow.get(rowIndex).push(change);
+        });
 
-            // Build WHERE clause using all column values to identify the row uniquely
+        // Apply changes row by row
+        changesByRow.forEach((rowChanges, rowIndex) => {
+            // Use the first change to get the row data (original values for WHERE clause)
+            const rowData = rowChanges[0].rowData;
+
+            // Build WHERE clause using original column values to identify the row uniquely
             const whereConditions = currentColumnNames.map((col, idx) => {
                 const value = rowData[idx];
                 if (value === null || value === "null") {
@@ -597,8 +622,14 @@ function saveChanges() {
                 }
             }).join(" AND ");
 
-            // Build UPDATE statement
-            const updateSql = `UPDATE "${currentTableName}" SET "${columnName}" = '${newValue.replace(/'/g, "''")}' WHERE ${whereConditions}`;
+            // Build SET clause with all changed columns for this row
+            const setClause = rowChanges.map(change => {
+                const escapedValue = change.newValue.replace(/'/g, "''");
+                return `"${change.columnName}" = '${escapedValue}'`;
+            }).join(", ");
+
+            // Build and execute UPDATE statement
+            const updateSql = `UPDATE "${currentTableName}" SET ${setClause} WHERE ${whereConditions}`;
 
             console.log("Executing:", updateSql);
             db.run(updateSql);

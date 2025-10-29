@@ -5,6 +5,7 @@
 [x] Automatically show all rows instead of having to run sql command.
 [x] Remove pagination card.
 [x] add search bar for EACH column
-[] add ability to edit cells
-[] In the export dropdown add option to save- updates selected .db
+[x] add ability to edit cells
+[x] In the export dropdown add option to save- updates selected .db
 [] Deploy to github pages (check privacy concerns)
+[] Add tutorial page
