@@ -33,12 +33,16 @@
 
 <div id="main-container" class="container shadow bg-white">
     <header id="header" class="row align-items-center p-4">
-        <img src="img/logo.png" width="54" height="54" class="col-auto p-0" alt="Database logo"/>
+        
 
         <div class="col">
             <h4 class="mb-0">Translations, Viewer & Editor</h4>
-            <p class="mb-0">Adrian G.</p>
+            <p class="mb-0"></p>
         </div>
+
+        <button type="button" class="btn btn-outline-primary btn-sm col-auto me-2" data-bs-toggle="modal" data-bs-target="#tutorialModal">
+            Tutorial
+        </button>
 
         <a href="#" id="resizer" aria-label="Expand/Collapse" class="col-auto text-decoration-none" style="color: #000000">
             <svg id="resizer-expand" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrows-angle-expand" viewBox="0 0 16 16">
@@ -131,6 +135,46 @@
 
 
 <input type="file" id="dropzone-dialog" style="opacity: 0;display:none">
+
+<!-- Tutorial Modal -->
+<div class="modal fade" id="tutorialModal" tabindex="-1" aria-labelledby="tutorialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tutorialModalLabel">Como Editar o Ver las traducciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="tutorial-step mb-4">
+                    <h6 class="fw-bold">Step 1: Subir translations.db</h6>
+                    <p class="mb-2">Haz click en el drop zone y selecciona el archivo translations.db</p>
+                    <img src="img/1.png" alt="Step 1: Load database file" class="img-fluid border rounded shadow-sm">
+                </div>
+
+                <div class="tutorial-step mb-4">
+                    <h6 class="fw-bold">Step 2: Buscar texto</h6>
+                    <p class="mb-2">Cada columna tiene su propia busqueda. Busca el texto que quieras editar. Si vas a buscar en otra columna, borra el texto en la anterior.</p>
+                    <img src="img/2.png" alt="Step 2: Search columns" class="img-fluid border rounded shadow-sm">
+                </div>
+
+                <div class="tutorial-step mb-4">
+                    <h6 class="fw-bold">Step 3: Editar texto</h6>
+                    <p class="mb-2">Haz click en cualquier celda para editar su contenido. Presiona Enter para confirmar o Esc para cancelar.</p>
+                    <img src="img/3.png" alt="Step 3: Edit columns" class="img-fluid border rounded shadow-sm">
+                </div>
+
+                <div class="tutorial-step mb-4">
+                    <h6 class="fw-bold">Step 4: Guardar cambios</h6>
+                    <p class="mb-2">Despues de hacer cambios, click en "Save Changes" y se descarga un nuevo trasnlations.db con los cambios.</p>
+                    <img src="img/4.png" alt="Step 4: Save changes" class="img-fluid border rounded shadow-sm">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="js/jquery-3.7.1.min.js"></script>
 <script src="js/filereader.js"></script>

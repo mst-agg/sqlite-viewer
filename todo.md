@@ -8,4 +8,4 @@
 [x] add ability to edit cells
 [x] In the export dropdown add option to save- updates selected .db
 [] Deploy to github pages (check privacy concerns)
-[] Add tutorial page
+[x] Add tutorial page

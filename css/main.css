@@ -72,3 +72,33 @@ body {
 .hidden-column {
     display: none !important;
 }
+
+/* Tutorial Modal Styles */
+.tutorial-step h6 {
+    color: #0d6efd;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.tutorial-step p {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.tutorial-step img {
+    max-width: 100%;
+    height: auto;
+    background-color: #f8f9fa;
+    padding: 10px;
+}
+
+#tutorialModal .modal-header {
+    background: #60fcee;
+    color: #000000;
+}
+
+#tutorialModal .modal-title {
+    font-weight: 600;
+}
+
+
