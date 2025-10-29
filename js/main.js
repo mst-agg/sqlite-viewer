@@ -9,6 +9,9 @@ const SQL_SELECT_REGEX = /SELECT\s+[^;]+\s+FROM\s+/mi;
 let db = null;
 let lastCachedQueryCount = { select: "", count: 0 };
 let loadedTableNames = [];
+let cellChanges = new Map(); // Track edited cells: key = "rowIndex-colIndex", value = {oldValue, newValue, columnName}
+let currentTableName = null;
+let currentColumnNames = [];
 const editor = ace.edit("sql-editor");
 const errorBox = $("#error");
 const infoBox = $("#info");
@@ -380,6 +383,14 @@ function renderQuery(query) {
 
     let columnTypes = new Map();
     const tableName = getTableNameFromQuery(query);
+
+    // Clear changes when switching tables
+    if (currentTableName !== tableName) {
+        cellChanges.clear();
+        updateSaveButton();
+    }
+    currentTableName = tableName;
+
     if (tableName != null) {
         columnTypes = getTableColumnTypes(tableName);
     }
@@ -397,6 +408,8 @@ function renderQuery(query) {
 
     let isEmptyTable = true;
     const columnNames = sel.getColumnNames();
+    currentColumnNames = columnNames; // Store for edit tracking
+
     for (let i = 0; i < columnNames.length; i++) {
         const columnName = columnNames[i];
         const type = columnTypes.has(columnName) ? columnTypes.get(columnNames[i]) : "";
@@ -419,7 +432,7 @@ function renderQuery(query) {
                 }
             } else {
                 let value = htmlEncode(s[i]);
-                tr.append(`<td><span title="${value}">${value}</span></td>`);
+                tr.append(`<td data-original-value="${value}"><span title="${value}">${value}</span></td>`);
             }
         }
         tbody.append(tr);
@@ -442,7 +455,47 @@ function renderQuery(query) {
         filterTable();
     });
 
+    // Initialize editable table
     dataBox.editableTableWidget();
+
+    // Track cell changes
+    $("#data tbody td").on("change", function(evt, newValue) {
+        const cell = $(this);
+        const rowIndex = cell.parent().index();
+        const colIndex = cell.index();
+        const cellKey = `${rowIndex}-${colIndex}`;
+        const columnName = currentColumnNames[colIndex];
+        const originalValue = cell.attr('data-original-value');
+
+        // Get the row data to find primary key or unique identifier (using original values)
+        const rowData = [];
+        cell.parent().find("td").each(function() {
+            const origVal = $(this).attr('data-original-value');
+            rowData.push(origVal || $(this).text());
+        });
+
+        // Store the change
+        if (!cellChanges.has(cellKey)) {
+            // First time editing this cell - store original value
+            cellChanges.set(cellKey, {
+                rowIndex: rowIndex,
+                colIndex: colIndex,
+                columnName: columnName,
+                oldValue: originalValue,
+                newValue: newValue,
+                rowData: rowData
+            });
+        } else {
+            // Update existing change
+            const change = cellChanges.get(cellKey);
+            change.newValue = newValue;
+        }
+
+        // Highlight the cell
+        cell.addClass('edited-cell');
+
+        updateSaveButton();
+    });
 }
 
 function filterTable() {
@@ -500,6 +553,74 @@ function formatBytes(bytes,decimals) {
 function onKeyDown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         executeSql();
+    }
+}
+
+function updateSaveButton() {
+    const saveBtn = $("#save-changes-btn");
+    const changeCount = $("#change-count");
+    const count = cellChanges.size;
+
+    if (count > 0) {
+        changeCount.text(count);
+        saveBtn.show();
+    } else {
+        saveBtn.hide();
+    }
+}
+
+function saveChanges() {
+    const changeCount = cellChanges.size;
+
+    if (changeCount === 0) {
+        alert("No changes to save!");
+        return;
+    }
+
+    if (!currentTableName) {
+        alert("Cannot determine which table to update!");
+        return;
+    }
+
+    try {
+        // Apply each change
+        cellChanges.forEach((change, key) => {
+            const { columnName, newValue, rowData } = change;
+
+            // Build WHERE clause using all column values to identify the row uniquely
+            const whereConditions = currentColumnNames.map((col, idx) => {
+                const value = rowData[idx];
+                if (value === null || value === "null") {
+                    return `"${col}" IS NULL`;
+                } else {
+                    return `"${col}" = '${value.replace(/'/g, "''")}'`;
+                }
+            }).join(" AND ");
+
+            // Build UPDATE statement
+            const updateSql = `UPDATE "${currentTableName}" SET "${columnName}" = '${newValue.replace(/'/g, "''")}' WHERE ${whereConditions}`;
+
+            console.log("Executing:", updateSql);
+            db.run(updateSql);
+        });
+
+        // Export the modified database
+        const data = db.export();
+        const blob = new Blob([data], { type: "application/x-sqlite3" });
+
+        // Use the original filename or default to translations.db
+        const filename = "translations.db";
+        saveAs(blob, filename);
+
+        // Clear changes and update UI
+        cellChanges.clear();
+        $(".edited-cell").removeClass("edited-cell");
+        updateSaveButton();
+
+        alert(`Database saved! ${changeCount} changes applied.\n\nThe file has been downloaded as "${filename}".\nReplace your original file with this downloaded version.`);
+    } catch (ex) {
+        alert("Error saving changes: " + ex.message);
+        console.error(ex);
     }
 }
 

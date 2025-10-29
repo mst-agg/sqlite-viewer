@@ -7,3 +7,4 @@
 [x] add search bar for EACH column
 [] add ability to edit cells
 [] In the export dropdown add option to save- updates selected .db
+[] Deploy to github pages (check privacy concerns)

@@ -40,7 +40,7 @@
             <p class="mb-0">Adrian G.</p>
         </div>
 
-        <a href="#" id="resizer" aria-label="Expand/Collapse" class="col-auto text-decoration-none" style="color: #60fcee">
+        <a href="#" id="resizer" aria-label="Expand/Collapse" class="col-auto text-decoration-none" style="color: #000000">
             <svg id="resizer-expand" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrows-angle-expand" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707m4.344-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707"/>
             </svg>
@@ -71,6 +71,10 @@
     <div id="output-box" class="container-fluid">
         <div class="input-group">
             <select id="tables" class="form-select" title="Table"></select>
+
+            <button class="btn btn-success ms-2" id="save-changes-btn" onclick="saveChanges()" style="display: none;">
+                Save Changes (<span id="change-count">0</span>)
+            </button>
 
             <div class="dropdown ms-2">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenu1"
@@ -137,7 +141,7 @@
 <script src="js/mindmup-editabletable.js"></script>
 <script src="js/jszip.min.js"></script>
 <script src="js/FileSaver.min.js"></script>
-<script src="js/main.js?v=18"></script>
+<script src="js/main.js?v=19"></script>
 
 </body>
 </html>

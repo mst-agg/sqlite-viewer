@@ -76,17 +76,63 @@ Fork of https://github.com/inloop/sqlite-viewer - A client-side SQLite database 
 5. Results render in table with pagination
 6. User can select different tables or write custom SQL
 
-## Planned Enhancements (from todo.md)
-1. Edit title, header & image (visual branding)
-2. Hide drop zone after file loads
-3. Auto-show all rows (remove 30-row limit)
-4. Remove pagination
-5. **Per-column search bars** (main feature)
-6. Enable cell editing
-7. Save changes back to .db file
+## Completed Enhancements
+
+### ✅ Visual Changes
+1. **Header color changed** to #60fcee (cyan/turquoise) - css/main.css:10
+2. **Removed upload info text** and sample file link from drop zone - index.html:60
+3. **Hide drop zone after file loads** - Fades out completely (main.js:144)
+
+### ✅ Data Display
+4. **Show 10,000 rows by default** instead of 30 - main.js:243
+5. **Hide pagination when only 1 page** - Only shows when pages > 1 (main.js:321)
+
+### ✅ Per-Column Search Bars
+6. **Search inputs in header** - Each column has a search box (index.html:101)
+7. **Real-time filtering** - Case-insensitive search across all columns (main.js:448-473)
+8. **Multi-column filtering** - All filters work together (AND logic)
+
+### ✅ Cell Editing & Saving
+9. **Click-to-edit cells** - Uses mindmup-editabletable.js (main.js:459)
+10. **Edited cells highlighted** - Yellow background with orange border (css/main.css:61-64)
+11. **Change tracking** - Stores all edits in Map structure (main.js:12-13)
+12. **Save Changes button** - Appears when edits exist, shows count (index.html:75-77)
+13. **Database export** - Generates UPDATE statements, exports modified .db (main.js:573-626)
+14. **Original values stored** - Each cell has data-original-value attribute (main.js:435)
+
+## New Functions Added
+
+### Edit Tracking
+- `updateSaveButton()` - Shows/hides save button based on change count (main.js:560)
+- `saveChanges()` - Applies all edits via UPDATE SQL, exports modified database (main.js:573)
+- `filterTable()` - Client-side filtering for column search (main.js:501)
+
+### New Variables
+- `cellChanges` - Map storing all cell edits (main.js:12)
+- `currentTableName` - Tracks current table for saving (main.js:13)
+- `currentColumnNames` - Array of column names for edit tracking (main.js:14)
+
+## Current Issues
+- **⚠️ Changes not appearing**: After hard refresh (Ctrl+Shift+R), new features (Save Changes button, cell editing) not visible
+  - Updated version number in index.html from v=18 to v=19 (index.html:144)
+  - Files have been modified correctly
+  - Possible browser cache issue or server not serving updated files
+
+## How Editing Works
+1. User clicks a cell to edit (mindmup-editabletable.js handles UI)
+2. On change event, cell gets yellow highlight
+3. Change tracked in cellChanges Map with: columnName, oldValue, newValue, rowData
+4. Save button appears showing number of changes
+5. On Save:
+   - Builds UPDATE SQL for each changed cell
+   - Uses entire row data in WHERE clause to identify unique row
+   - Executes all UPDATEs on in-memory database
+   - Exports database using db.export()
+   - Downloads as "translations.db"
+   - User replaces original file manually
 
 ## Notes
-- The app already includes `mindmup-editabletable.js` (main.js:145, 437) which provides cell editing
 - WASM path is hardcoded to GitHub Pages URL (main.js:3)
 - Running on localhost:8080 via Python HTTP server
 - Git branch: gh-pages (used for GitHub Pages deployment)
+- CSV export functionality remains available in Export dropdown
