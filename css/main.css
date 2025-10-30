@@ -24,6 +24,11 @@ body {
     display: none;
 }
 
+/* Hide SQL editor and execute button */
+#output-box .d-flex.mt-3.mb-3 {
+    display: none !important;
+}
+
 .ace_hidden-cursors {
     opacity: 0;
 }

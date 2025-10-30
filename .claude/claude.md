@@ -89,50 +89,64 @@ Fork of https://github.com/inloop/sqlite-viewer - A client-side SQLite database 
 
 ### ✅ Per-Column Search Bars
 6. **Search inputs in header** - Each column has a search box (index.html:101)
-7. **Real-time filtering** - Case-insensitive search across all columns (main.js:448-473)
+7. **Real-time filtering** - Case-insensitive search across all columns (main.js:501-520)
 8. **Multi-column filtering** - All filters work together (AND logic)
 
 ### ✅ Cell Editing & Saving
-9. **Click-to-edit cells** - Uses mindmup-editabletable.js (main.js:459)
+9. **Click-to-edit cells** - Uses mindmup-editabletable.js, fixed readonly issue (js/mindmup-editabletable.js:140)
 10. **Edited cells highlighted** - Yellow background with orange border (css/main.css:61-64)
 11. **Change tracking** - Stores all edits in Map structure (main.js:12-13)
 12. **Save Changes button** - Appears when edits exist, shows count (index.html:75-77)
-13. **Database export** - Generates UPDATE statements, exports modified .db (main.js:573-626)
-14. **Original values stored** - Each cell has data-original-value attribute (main.js:435)
+13. **Database export** - Groups changes by row, generates efficient UPDATE statements (main.js:572-642)
+14. **Original values stored** - Each cell has data-original-value attribute (main.js:446)
+15. **Multiple edits per row** - Fixed to handle multiple cell changes in same row correctly (main.js:586-622)
+
+### ✅ Column Access Control
+16. **'en' column non-editable** - Grayed out, locked from editing (main.js:438, css/main.css:66-70)
+17. **'context_checked' column hidden** - Completely hidden from view (main.js:416-442, css/main.css:72-74)
 
 ## New Functions Added
 
 ### Edit Tracking
-- `updateSaveButton()` - Shows/hides save button based on change count (main.js:560)
-- `saveChanges()` - Applies all edits via UPDATE SQL, exports modified database (main.js:573)
-- `filterTable()` - Client-side filtering for column search (main.js:501)
+- `updateSaveButton()` - Shows/hides save button based on change count (main.js:560-570)
+- `saveChanges()` - Groups changes by row, applies all edits via UPDATE SQL, exports modified database (main.js:572-642)
+- `filterTable()` - Client-side filtering for column search (main.js:501-520)
 
 ### New Variables
 - `cellChanges` - Map storing all cell edits (main.js:12)
 - `currentTableName` - Tracks current table for saving (main.js:13)
 - `currentColumnNames` - Array of column names for edit tracking (main.js:14)
 
-## Current Issues
-- **⚠️ Changes not appearing**: After hard refresh (Ctrl+Shift+R), new features (Save Changes button, cell editing) not visible
-  - Updated version number in index.html from v=18 to v=19 (index.html:144)
-  - Files have been modified correctly
-  - Possible browser cache issue or server not serving updated files
+## Fixed Issues
+- **✅ Readonly textarea** - Removed readonly attribute from mindmup-editabletable.js (line 140)
+- **✅ Multiple edits per row** - Now groups changes by row and creates single UPDATE statement per row
+- **✅ Span wrapper blocking edits** - Removed span wrappers from td elements (main.js:446)
 
 ## How Editing Works
 1. User clicks a cell to edit (mindmup-editabletable.js handles UI)
-2. On change event, cell gets yellow highlight
-3. Change tracked in cellChanges Map with: columnName, oldValue, newValue, rowData
-4. Save button appears showing number of changes
-5. On Save:
-   - Builds UPDATE SQL for each changed cell
-   - Uses entire row data in WHERE clause to identify unique row
+2. Textarea appears for editing (removed readonly attribute to enable)
+3. Press Enter to save edit, ESC to cancel
+4. On change event, cell gets yellow highlight with orange border
+5. Change tracked in cellChanges Map with: rowIndex, colIndex, columnName, oldValue, newValue, rowData
+6. Save button appears showing number of changes
+7. On Save:
+   - Groups all changes by row (main.js:586-594)
+   - Builds single UPDATE SQL per row with multiple SET clauses (main.js:596-622)
+   - Uses original row data in WHERE clause to identify unique row
    - Executes all UPDATEs on in-memory database
    - Exports database using db.export()
    - Downloads as "translations.db"
    - User replaces original file manually
+   - Clears change tracking and highlights
+
+## Column Configuration
+- **'en' column** - Non-editable (protected from changes), visually grayed out
+- **'context_checked' column** - Completely hidden from UI (but data remains in database)
+- **All other columns** - Fully editable with change tracking
 
 ## Notes
 - WASM path is hardcoded to GitHub Pages URL (main.js:3)
 - Running on localhost:8080 via Python HTTP server
 - Git branch: gh-pages (used for GitHub Pages deployment)
 - CSV export functionality remains available in Export dropdown
+- Current version: v=24 (index.html:144)
