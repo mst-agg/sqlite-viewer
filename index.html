@@ -6,7 +6,7 @@
     <meta name="keywords" content="sqlite,viewer,db,database,online">
     <meta name="author" content="Juraj Novák">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQLite Viewer</title>
+    <title>Multi-Language Translations Panel</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/select2.min.css" rel="stylesheet">
     <link href="css/select2-bootstrap-5-theme.min.css" rel="stylesheet">
@@ -86,6 +86,8 @@
                     Export
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    <li><a class="dropdown-item" href="#" onclick="exportToExcel()">Export to Excel (.xlsx)</a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" onclick="exportAllToCsv()">All tables to CSV</a></li>
                     <li><a class="dropdown-item" href="#" onclick="exportSelectedTableToCsv()">Selected table to CSV</a></li>
                     <li><a class="dropdown-item" href="#" onclick="exportQueryTableToCsv()">Query table to CSV</a></li>
@@ -185,6 +187,7 @@
 <script src="js/mindmup-editabletable.js"></script>
 <script src="js/jszip.min.js"></script>
 <script src="js/FileSaver.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="js/main.js?v=24"></script>
 
 </body>

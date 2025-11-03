@@ -737,3 +737,70 @@ function exportQueryTableToCsv() {
 
     setIsLoading(false);
 }
+
+function exportToExcel() {
+    const tableName = $("#tables").val();
+
+    if (!tableName) {
+        alert("Please select a table first!");
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        // Get all data from current table (no LIMIT)
+        const query = "SELECT * FROM '" + tableName + "'";
+        const results = db.exec(query);
+
+        if (!results || results.length === 0) {
+            alert("No data to export!");
+            setIsLoading(false);
+            return;
+        }
+
+        const result = results[0];
+        const columns = result.columns;
+        const values = result.values;
+
+        // Filter out hidden columns (like 'context_checked')
+        const visibleColumnIndices = [];
+        const visibleColumns = [];
+
+        columns.forEach((col, index) => {
+            if (col !== 'context_checked') {  // Skip hidden columns
+                visibleColumnIndices.push(index);
+                visibleColumns.push(col);
+            }
+        });
+
+        // Filter values to only include visible columns
+        const filteredValues = values.map(row =>
+            visibleColumnIndices.map(index => row[index])
+        );
+
+        // Create worksheet data: [headers, ...rows]
+        const wsData = [visibleColumns, ...filteredValues];
+
+        // Create worksheet from array of arrays
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+        // Create workbook and add worksheet
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, tableName);
+
+        // Generate filename
+        const filename = tableName.toLowerCase() + '.xlsx';
+
+        // Write file
+        XLSX.writeFile(wb, filename);
+
+        console.log("Excel export successful: " + filename);
+
+    } catch (error) {
+        console.error("Excel export error:", error);
+        alert("Error exporting to Excel: " + error.message);
+    }
+
+    setIsLoading(false);
+}
