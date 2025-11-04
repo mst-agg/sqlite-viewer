@@ -804,3 +804,93 @@ function exportToExcel() {
 
     setIsLoading(false);
 }
+
+function splitTableByLanguage() {
+    const tableName = $("#tables").val();
+
+    if (!tableName) {
+        alert("Please select a table first!");
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        // Get all columns from the table
+        const query = "SELECT * FROM '" + tableName + "' LIMIT 1";
+        const results = db.exec(query);
+
+        if (!results || results.length === 0) {
+            alert("No data to export!");
+            setIsLoading(false);
+            return;
+        }
+
+        const allColumns = results[0].columns;
+
+        // Filter to get language columns (exclude 'en' and 'context_checked')
+        const languageColumns = allColumns.filter(col =>
+            col.toLowerCase() !== 'en' && col.toLowerCase() !== 'context_checked'
+        );
+
+        if (languageColumns.length === 0) {
+            alert("No language columns found to split!");
+            setIsLoading(false);
+            return;
+        }
+
+        // Check if 'en' column exists
+        if (!allColumns.includes('en')) {
+            alert("'en' column not found in table!");
+            setIsLoading(false);
+            return;
+        }
+
+        // Create a separate database for each language
+        initSqlJs({locateFile: file => SQL_WASM_PATH}).then(function (SQL) {
+            languageColumns.forEach(langCol => {
+                // Create new database
+                const newDb = new SQL.Database();
+
+                // Create table with just 'en' and the language column
+                const createTableSql = `CREATE TABLE "${tableName}" (en TEXT, "${langCol}" TEXT)`;
+                newDb.run(createTableSql);
+
+                // Copy data (only 'en' and language column)
+                const selectSql = `SELECT en, "${langCol}" FROM '${tableName}'`;
+                const sourceResults = db.exec(selectSql);
+
+                if (sourceResults && sourceResults.length > 0) {
+                    const values = sourceResults[0].values;
+
+                    // Insert all rows into new database
+                    values.forEach(row => {
+                        const enValue = row[0] !== null ? row[0].toString().replace(/'/g, "''") : '';
+                        const langValue = row[1] !== null ? row[1].toString().replace(/'/g, "''") : '';
+                        const insertSql = `INSERT INTO "${tableName}" (en, "${langCol}") VALUES ('${enValue}', '${langValue}')`;
+                        newDb.run(insertSql);
+                    });
+                }
+
+                // Export the new database
+                const data = newDb.export();
+                const blob = new Blob([data], { type: "application/x-sqlite3" });
+                const filename = `translations-en-${langCol}.db`;
+
+                saveAs(blob, filename);
+                console.log(`Created: ${filename}`);
+
+                // Close the new database
+                newDb.close();
+            });
+
+            alert(`Successfully created ${languageColumns.length} split database(s)!\n\nFiles: ${languageColumns.map(col => `translations-en-${col}.db`).join(', ')}`);
+            setIsLoading(false);
+        });
+
+    } catch (error) {
+        console.error("Split table error:", error);
+        alert("Error splitting table: " + error.message);
+        setIsLoading(false);
+    }
+}
