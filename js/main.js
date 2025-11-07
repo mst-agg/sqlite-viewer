@@ -127,6 +127,11 @@ function loadDB(arrayBuffer) {
             const name = rowObj["name"];
             const type = rowObj["type"];
 
+            // Skip sqlite internal tables
+            if (name === 'sqlite_sequence') {
+                continue;
+            }
+
             if (firstTableName === null) {
                 firstTableName = name;
             }
