@@ -899,3 +899,103 @@ function splitTableByLanguage() {
         setIsLoading(false);
     }
 }
+
+function splitToExcel() {
+    const tableName = $("#tables").val();
+
+    if (!tableName) {
+        alert("Please select a table first!");
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        // Get all columns from the table
+        const query = "SELECT * FROM '" + tableName + "'";
+        const results = db.exec(query);
+
+        if (!results || results.length === 0) {
+            alert("No data to export!");
+            setIsLoading(false);
+            return;
+        }
+
+        const allColumns = results[0].columns;
+        const allValues = results[0].values;
+
+        // Get index of id and en columns
+        const idIndex = allColumns.findIndex(col => col.toLowerCase() === 'id');
+        const enIndex = allColumns.findIndex(col => col.toLowerCase() === 'en');
+
+        if (idIndex === -1 || enIndex === -1) {
+            alert("'id' or 'en' column not found in table!");
+            setIsLoading(false);
+            return;
+        }
+
+        // Filter to get language columns (exclude 'id', 'en', and 'context_checked')
+        const languageColumns = allColumns
+            .map((col, index) => ({ col, index }))
+            .filter(item =>
+                item.col.toLowerCase() !== 'id' &&
+                item.col.toLowerCase() !== 'en' &&
+                item.col.toLowerCase() !== 'context_checked'
+            );
+
+        if (languageColumns.length === 0) {
+            alert("No language columns found to split!");
+            setIsLoading(false);
+            return;
+        }
+
+        // Create a ZIP file to hold all Excel files
+        const zip = new JSZip();
+
+        // Create an Excel file for each language
+        languageColumns.forEach(langItem => {
+            const langCol = langItem.col;
+            const langIndex = langItem.index;
+
+            // Prepare data: headers and rows with id, en, and language column
+            const headers = ['id', 'en', langCol];
+            const rows = allValues.map(row => [
+                row[idIndex],
+                row[enIndex],
+                row[langIndex]
+            ]);
+
+            // Create worksheet data: [headers, ...rows]
+            const wsData = [headers, ...rows];
+
+            // Create worksheet from array of arrays
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Create workbook and add worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'translations');
+
+            // Generate Excel file as binary
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+            // Add to ZIP
+            const filename = `translations-en-${langCol}.xlsx`;
+            zip.file(filename, wbout);
+
+            console.log(`Added to ZIP: ${filename}`);
+        });
+
+        // Generate and download the ZIP file
+        zip.generateAsync({ type: "blob" })
+            .then(function (content) {
+                saveAs(content, "split-translations.zip");
+                alert(`Successfully created ${languageColumns.length} Excel file(s)!\n\nDownloading: split-translations.zip`);
+                setIsLoading(false);
+            });
+
+    } catch (error) {
+        console.error("Split to Excel error:", error);
+        alert("Error splitting to Excel: " + error.message);
+        setIsLoading(false);
+    }
+}
