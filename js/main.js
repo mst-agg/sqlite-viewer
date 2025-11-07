@@ -434,8 +434,8 @@ function renderQuery(query) {
                 }
             } else {
                 let value = htmlEncode(s[i]);
-                // Mark 'en' column as non-editable, hide 'context_checked' column
-                const isReadOnly = columnName.toLowerCase() === 'en';
+                // Mark 'en' and 'id' columns as non-editable, hide 'context_checked' column
+                const isReadOnly = columnName.toLowerCase() === 'en' || columnName.toLowerCase() === 'id';
                 const isHidden = columnName.toLowerCase() === 'context_checked';
                 let classAttr = '';
                 if (isHidden) {
